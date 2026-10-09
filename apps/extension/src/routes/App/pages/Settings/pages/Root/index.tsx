@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import browser from "webextension-polyfill";
 
 import { DEFAULT_AUTO_LOCK_MINUTES } from "@/core/secure-vault/application/wallet-vault/auto-lock";
 import { walletVaultClient } from "@/core/secure-vault/application/wallet-vault/client";
@@ -44,6 +45,9 @@ export function SettingsRootPage() {
 			isLocking={lockMutation.isPending}
 			onAutoLockChange={(minutes) => autoLockMutation.mutate(minutes)}
 			onLock={() => lockMutation.mutate()}
+			onOpenRtx={() => {
+				void browser.tabs.create({ url: browser.runtime.getURL("src/rtx-on.html") });
+			}}
 			onSwitch={accounts.selectAccount}
 			selectedAccountGroupId={accounts.accountGroup?.id ?? null}
 		/>

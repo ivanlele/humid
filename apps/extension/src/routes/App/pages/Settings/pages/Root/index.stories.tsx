@@ -44,6 +44,7 @@ const meta = {
 		isLocking: false,
 		onAutoLockChange: () => {},
 		onLock: () => {},
+		onOpenRtx: () => {},
 		onSwitch: () => {},
 		selectedAccountGroupId: "account-group:1",
 	},

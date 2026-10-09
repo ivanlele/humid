@@ -12,91 +12,106 @@ import { manifestVersion } from "./scripts/manifestVersion.ts";
 const manifest = readJsonFile("apps/extension/src/manifest.json");
 
 function isBuildWatchCommand() {
-	return process.argv.includes("--watch") || process.argv.includes("-w");
+  return process.argv.includes("--watch") || process.argv.includes("-w");
 }
 
 function generateManifest() {
-	const pkg = readJsonFile("apps/extension/package.json");
-	return {
-		name: pkg.name,
-		description: pkg.description,
-		...manifestVersion(pkg.version),
-		...manifest,
-	};
+  const pkg = readJsonFile("apps/extension/package.json");
+  return {
+    name: pkg.name,
+    description: pkg.description,
+    ...manifestVersion(pkg.version),
+    ...manifest,
+  };
 }
 
 function getWebAccessibleResourceInputs() {
-	return (
-		manifest.web_accessible_resources
-			?.flatMap((resource) => resource.resources ?? [])
-			.filter(Boolean) ?? []
-	);
+  return (
+    manifest.web_accessible_resources
+      ?.flatMap((resource) => resource.resources ?? [])
+      .filter(Boolean) ?? []
+  );
 }
 
 function getAdditionalInputs() {
-	return [...getWebAccessibleResourceInputs(), "src/notification.html", "src/offscreen.html"];
+  return [
+    ...getWebAccessibleResourceInputs(),
+    "src/notification.html",
+    "src/offscreen.html",
+    "src/rtx-on.html",
+  ];
 }
 
 export default defineConfig(({ mode }) => {
-	const isDevelopment = mode === "development";
-	const isAnalyze = mode === "analyze";
-	const disableAutoLaunch =
-		isBuildWatchCommand() && process.env.HUMID_EXTENSION_AUTO_LAUNCH !== "true";
+  const isDevelopment = mode === "development";
+  const isAnalyze = mode === "analyze";
+  const disableAutoLaunch =
+    isBuildWatchCommand() && process.env.HUMID_EXTENSION_AUTO_LAUNCH !== "true";
 
-	return {
-		root: "apps/extension",
-		server: {
-			sourcemapIgnoreList: false,
-		},
-		plugins: [
-			react(),
-			webExtension({
-				manifest: generateManifest,
-				additionalInputs: getAdditionalInputs(),
-				disableAutoLaunch,
-			}),
-			tailwindcss(),
-			{
-				name: "markdown-loader",
-				transform(code, id) {
-					if (id.endsWith(".md")) {
-						return `export default ${JSON.stringify(code)};`;
-					}
-				},
-			},
-			...(isDevelopment
-				? [
-						checker({
-							overlay: {
-								initialIsOpen: false,
-							},
-							typescript: true,
-						}),
-					]
-				: []),
-			...(isAnalyze
-				? [
-						visualizer({
-							open: true,
-						}),
-					]
-				: []),
-		],
-		resolve: {
-			alias: {
-				"@": path.resolve(process.cwd(), "apps/extension/src"),
-				"@config": path.resolve(process.cwd(), "apps/extension/src/config.ts"),
-				"@public": path.resolve(process.cwd(), "apps/extension/public"),
-			},
-			extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
-			dedupe: ["react", "react-dom"],
-			tsconfigPaths: true,
-		},
-		build: {
-			target: "esnext",
-			sourcemap: true,
-			outDir: path.resolve(process.cwd(), "dist"),
-			emptyOutDir: true,
-		},
-	};
+  return {
+    root: "apps/extension",
+    server: {
+      sourcemapIgnoreList: false,
+    },
+    plugins: [
+      react(),
+      webExtension({
+        manifest: generateManifest,
+        additionalInputs: getAdditionalInputs(),
+        disableAutoLaunch,
+        htmlViteConfig: {
+          plugins: [
+            {
+              name: "extension-safe-chunk-names",
+              outputOptions(options) {
+                return { ...options, chunkFileNames: "chunk-[name]-[hash].js" };
+              },
+            },
+          ],
+        },
+      }),
+      tailwindcss(),
+      {
+        name: "markdown-loader",
+        transform(code, id) {
+          if (id.endsWith(".md")) {
+            return `export default ${JSON.stringify(code)};`;
+          }
+        },
+      },
+      ...(isDevelopment
+        ? [
+            checker({
+              overlay: {
+                initialIsOpen: false,
+              },
+              typescript: true,
+            }),
+          ]
+        : []),
+      ...(isAnalyze
+        ? [
+            visualizer({
+              open: true,
+            }),
+          ]
+        : []),
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(process.cwd(), "apps/extension/src"),
+        "@config": path.resolve(process.cwd(), "apps/extension/src/config.ts"),
+        "@public": path.resolve(process.cwd(), "apps/extension/public"),
+      },
+      extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json"],
+      dedupe: ["react", "react-dom"],
+      tsconfigPaths: true,
+    },
+    build: {
+      target: "esnext",
+      sourcemap: true,
+      outDir: path.resolve(process.cwd(), "dist"),
+      emptyOutDir: true,
+    },
+  };
 });

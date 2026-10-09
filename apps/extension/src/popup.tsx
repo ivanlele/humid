@@ -7,6 +7,7 @@ import "./popup.css";
 import { initPegasusTransport } from "@webext-pegasus/transport/popup";
 import React from "react";
 import { createRoot } from "react-dom/client";
+import browser from "webextension-polyfill";
 
 import { ConfirmProvider } from "@/common/Confirmation";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
@@ -17,6 +18,20 @@ import { authStore } from "@/store/auth";
 
 initPegasusTransport();
 initGlobalErrorReporting();
+
+window.addEventListener("keydown", (event) => {
+	if (
+		event.code !== "KeyR" ||
+		!event.altKey ||
+		!event.shiftKey ||
+		event.repeat ||
+		event.ctrlKey ||
+		event.metaKey
+	)
+		return;
+	event.preventDefault();
+	void browser.tabs.create({ url: browser.runtime.getURL("src/rtx-on.html") });
+});
 
 const queryClient = new QueryClient();
 const rootElement = document.getElementById("root");

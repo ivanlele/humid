@@ -5,6 +5,7 @@ import {
 	PaintBoardIcon,
 	ShieldKeyIcon,
 	SquareLock01Icon,
+	Sun01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -31,6 +32,7 @@ type SettingsRootViewProps = {
 	isLocking: boolean;
 	onAutoLockChange: (minutes: number) => void;
 	onLock: () => void;
+	onOpenRtx: () => void;
 	onSwitch: (accountGroupId: AccountGroupId) => void;
 	selectedAccountGroupId: AccountGroupId | null;
 };
@@ -41,6 +43,7 @@ export function SettingsRootView({
 	isLocking,
 	onAutoLockChange,
 	onLock,
+	onOpenRtx,
 	onSwitch,
 	selectedAccountGroupId,
 }: SettingsRootViewProps) {
@@ -103,6 +106,15 @@ export function SettingsRootView({
 								size={16}
 							/>
 						</Link>
+						<button
+							className="hover:bg-accent flex items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors"
+							onClick={onOpenRtx}
+							type="button"
+						>
+							<HugeiconsIcon className="text-muted-foreground" icon={Sun01Icon} size={18} />
+							<span className="flex-1 text-sm font-medium">RTX ON</span>
+							<HugeiconsIcon className="text-muted-foreground/60" icon={ArrowRight01Icon} size={16} />
+						</button>
 						<DisabledRow icon={ShieldKeyIcon} label="Change password" />
 					</section>
 
